@@ -23,19 +23,36 @@ func ProviderClient(num models.PhoneNumber) models.SMSProvider {
 
 func ReadMessages(num models.PhoneNumber) {
 	log.Printf("Reading messages for number: %v, provider: %v", num.RawNumber, num.Provider)
+
+	var currentJob models.PhoneNumber
+	coll := db.Collection("numbers")
+	coll.FindOneAndUpdate(db.DefaultCtx(), bson.M{"_id": num.ID, "running": bson.M{"$ne": true}}, bson.M{"$set": bson.M{"running": true}}).Decode(&currentJob)
+
+	defer func() {
+		coll.UpdateOne(db.DefaultCtx(), bson.M{"_id": num.ID}, bson.D{
+			{"$set", bson.M{"running": false}},
+		})
+	}()
+
+	if len(currentJob.Number) == 0 {
+		log.Printf("Job %v is already running, skip.", num.RawNumber)
+		return
+	}
+
 	client := ProviderClient(num)
 	messages := client.FetchMessages(num.ProviderID, 0)
 	log.Printf("%d messages found for number: %v", len(messages), num.RawNumber)
 
-	coll := db.Collection("numbers")
 	updates := bson.M{
 		"messages":     messages,
 		"last_read_at": time.Now(),
+		"running":      false,
 	}
 
 	if len(messages) == 0 {
 		updates = bson.M{
 			"last_read_at": time.Now(),
+			"running":      false,
 		}
 	}
 
