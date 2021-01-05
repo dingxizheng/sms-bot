@@ -28,6 +28,6 @@ func main() {
 	// log.Printf("Messages: %+v", messages)
 
 	// go providers.ReadMessagesForNewNumbers()
-	go providers.ReadMessagesForScheduledJobs()
+	go providers.ReadMessagesForScheduledNumbers()
 	web.Start()
 }

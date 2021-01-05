@@ -28,12 +28,6 @@ func ReadMessages(num models.PhoneNumber) {
 	coll := db.Collection("numbers")
 	coll.FindOneAndUpdate(db.DefaultCtx(), bson.M{"_id": num.ID, "running": bson.M{"$ne": true}}, bson.M{"$set": bson.M{"running": true}}).Decode(&currentJob)
 
-	defer func() {
-		coll.UpdateOne(db.DefaultCtx(), bson.M{"_id": num.ID}, bson.D{
-			{"$set", bson.M{"running": false}},
-		})
-	}()
-
 	if len(currentJob.Number) == 0 {
 		log.Printf("Job %v is already running, skip.", num.RawNumber)
 		return
@@ -80,10 +74,10 @@ func ReadMessagesForNewNumbers() {
 	}
 }
 
-func ReadMessagesForScheduledJobs() {
+func ReadMessagesForScheduledNumbers() {
 	coll := db.Collection("numbers")
 	for {
-		time.Sleep(1 * time.Second)
+		time.Sleep(3 * time.Second)
 		cursor, _ := coll.Find(db.DefaultCtx(), bson.M{"status": "online", "next_read_at": bson.M{"$gte": time.Now()}})
 		for cursor.Next(db.DefaultCtx()) {
 			num := models.PhoneNumber{}
