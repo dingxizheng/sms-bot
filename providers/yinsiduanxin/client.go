@@ -12,8 +12,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"golang.org/x/time/rate"
 
 	"github.com/dingxizheng/sms-bot/db"
+	"github.com/dingxizheng/sms-bot/httpclient"
 	"github.com/dingxizheng/sms-bot/providers/models"
 )
 
@@ -26,13 +28,14 @@ const (
 
 type Client struct{}
 
-var httpClient = &http.Client{}
+var rl = rate.NewLimiter(rate.Every(1*time.Second), 2)
+var httpClient = httpclient.NewClient(rl)
 
 const ProviderName = "YinSiDuanXin"
 
 func setDefaultHeaders(req *http.Request) {
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_1_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36")
-	req.Header.Set("X-Requested-With", "XMLHttpRequest")
+	req.Header.Set("Referer", "https://www.google.com/")
 }
 
 // Name returns the name of current provider

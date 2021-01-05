@@ -9,12 +9,14 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/dingxizheng/sms-bot/db"
+	"github.com/dingxizheng/sms-bot/httpclient"
 	"github.com/dingxizheng/sms-bot/providers/models"
 	"github.com/karrick/tparse/v2"
 	"github.com/ttacon/libphonenumber"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"golang.org/x/time/rate"
 )
 
 const (
@@ -26,13 +28,14 @@ const (
 
 type Client struct{}
 
-var httpClient = &http.Client{}
+var rl = rate.NewLimiter(rate.Every(1*time.Second), 2)
+var httpClient = httpclient.NewClient(rl)
 
 const ProviderName = "ReceiveSmss"
 
 func setDefaultHeaders(req *http.Request) {
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_1_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36")
-	req.Header.Set("Referer", "https://receive-smss.com/sms/")
+	req.Header.Set("Referer", "https://www.google.com/")
 	req.Header.Set("Cookie", "__cfduid=d2fc1f5d650d5249a10a45e1d0bf572381609708106; PHPSESSID=e4ngj48e2mdtf6rt2ftcal75pd;")
 }
 
