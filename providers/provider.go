@@ -7,15 +7,19 @@ import (
 	"github.com/dingxizheng/sms-bot/db"
 	"github.com/dingxizheng/sms-bot/providers/models"
 	"github.com/dingxizheng/sms-bot/providers/receivesmss"
+	"github.com/dingxizheng/sms-bot/providers/sms24"
 	"github.com/dingxizheng/sms-bot/providers/yinsiduanxin"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+// ProviderClient - returns provier client for given phone number
 func ProviderClient(num models.PhoneNumber) models.SMSProvider {
 	if num.Provider == yinsiduanxin.ProviderName {
 		return &yinsiduanxin.Client{}
 	} else if num.Provider == receivesmss.ProviderName {
 		return &receivesmss.Client{}
+	} else if num.Provider == sms24.ProviderName {
+		return &sms24.Client{}
 	}
 
 	return nil
@@ -84,5 +88,15 @@ func ReadMessagesForScheduledNumbers() {
 			cursor.Decode(&num)
 			go ReadMessages(num)
 		}
+	}
+}
+
+func ScanPhoneNumbers() {
+	client1 := receivesmss.Client{}
+	client2 := sms24.Client{}
+	for {
+		client2.StartCrawling()
+		client1.StartCrawling()
+		time.Sleep(20 * time.Minute)
 	}
 }

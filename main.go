@@ -1,10 +1,10 @@
 package main
 
-import ( // "github.com/go-resty/resty/v2"
-	// Load variables from .env file
-
+import (
 	"github.com/dingxizheng/sms-bot/providers"
 	"github.com/dingxizheng/sms-bot/web"
+
+	// Load variables from .env file
 	_ "github.com/joho/godotenv/autoload"
 )
 
@@ -15,9 +15,9 @@ func main() {
 	// // countryCode := libphonenumber.GetCountryCodeForRegion(regionNumber)
 	// log.Printf("GOOD nubmer: %v", regionNumber)
 
-	// client2 := receivesmss.Client{}
+	// client2 := sms24.Client{}
 	// client2.StartCrawling()
-	// messages := client2.FetchMessages("18632801187", 0)
+	// messages := client2.FetchNumbers(1)
 	// log.Printf("Messages: %+v", messages)
 	// client := yinsiduanxin.Client{}
 
@@ -28,6 +28,7 @@ func main() {
 	// log.Printf("Messages: %+v", messages)
 
 	// go providers.ReadMessagesForNewNumbers()
+	go providers.ScanPhoneNumbers()
 	go providers.ReadMessagesForScheduledNumbers()
 	web.Start()
 }
