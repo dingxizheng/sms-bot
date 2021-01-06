@@ -33,7 +33,7 @@ var rl = rate.NewLimiter(rate.Every(1*time.Second), 2)
 var httpClient = httpclient.NewClient(rl)
 
 // Name of the provider
-const ProviderName = "SMS24"
+const ProviderName = "sms"
 
 func setDefaultHeaders(req *http.Request) {
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_1_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36")

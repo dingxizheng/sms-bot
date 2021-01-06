@@ -21,6 +21,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/motemen/gore v0.5.1 // indirect
 	github.com/peterh/liner v1.2.1 // indirect
+	github.com/thinkerou/favicon v0.1.0
 	github.com/ttacon/builder v0.0.0-20170518171403-c099f663e1c2 // indirect
 	github.com/ttacon/libphonenumber v1.1.0
 	github.com/ugorji/go v1.2.2 // indirect

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/thinkerou/favicon"
 	"github.com/xeonx/timeago"
 )
 
@@ -18,6 +19,13 @@ func Start() {
 		"formatAsTimeAgo": formatAsTimeAgo,
 	})
 	router.LoadHTMLGlob("templates/*")
+	// Mount favicon
+	router.Use(favicon.New("./favicon.ico"))
+
+	// Not found
+	router.NoRoute(func(c *gin.Context) {
+		c.HTML(404, "404.html", gin.H{})
+	})
 
 	// Mount controllers
 	MountIndexController(router)

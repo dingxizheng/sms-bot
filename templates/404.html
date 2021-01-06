@@ -48,53 +48,12 @@
     </header>
     
     <main class="container">
-      <div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
-        <h1 class="display-4">{{ .number.RawNumber }}</h1>
-        <p class="lead">Receive your SMS online with our virtual numbers for free!</p>
-      </div>
-
-      <div class="row justify-content-md-center">
-        <div class="col-md-auto gut-2">
-          <button type="button" class="btn btn-outline-primary btn-md" onclick="window.location.reload();">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-counterclockwise" viewBox="0 0 16 16">
-              <path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2v1z"/>
-              <path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466z"/>
-            </svg>
-            Refresh
-          </button>
-
-          <button type="button" class="btn btn-outline-primary btn-md" onclick="window.location.reload();">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-counterclockwise" viewBox="0 0 16 16">
-              <path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2v1z"/>
-              <path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466z"/>
-            </svg>
-            Update Messages
-          </button>
-        </div>
-      </div>
-
-      <div style="height: 20px;"></div>
-      <table class="table table-hover table-lg">
-        <thead class="thead-dark">
-          <tr class="table-light">
-            <th scope="col"><span class="my-2">Sender</span></th>
-            <th scope="col"><span class="my-2">Message</span></th>
-          </tr>
-        </thead>
-        <tbody>
-          {{ range .messages }}
-          <tr>
-            <td>
-              <div><span class="badge bg-primary fw-light">{{ .From }}</span></div>
-              <div><span class="badge bg-light text-dark fw-light">{{ .ReceivedAt | formatAsTimeAgo }}</span></div>
-            </td>
-            <td><p class="fw-light">{{ .Text }}</p></td>
-          </tr>
-          {{ end }}
-        </tbody>
-      </table>
       
-    
+      <div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
+        <h1 class="display-4">404</h1>
+        <p class="lead">Page not found</p>
+      </div>
+  
       <footer class="pt-4 my-md-5 pt-md-5 border-top">
         <div class="row">
           <div class="col-12 col-md">

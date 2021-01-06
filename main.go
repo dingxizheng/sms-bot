@@ -28,7 +28,7 @@ func main() {
 	// log.Printf("Messages: %+v", messages)
 
 	// go providers.ReadMessagesForNewNumbers()
-	go providers.ScanPhoneNumbers()
+	// go providers.ScanPhoneNumbers()
 	go providers.ReadMessagesForScheduledNumbers()
 	web.Start()
 }

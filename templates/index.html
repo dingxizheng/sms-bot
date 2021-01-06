@@ -62,13 +62,41 @@
               </div>
               <div class="card-body my-2">
                 <h3 class="card-title pricing-card-title"><small class="text-muted">+{{ .CountryCode }}</small>&nbsp;{{ .Number }}</h3>
-                <a type="button" href="/free-sms-messages?id={{ .ID.Hex }}" class="w-100 btn btn-lg btn-outline-primary">Read Messages</a>
+                <a type="button" href="/free-sms-messages/{{ .Provider }}/{{ .ProviderID }}" class="w-100 btn btn-lg btn-outline-primary">Read Messages</a>
               </div>
             </div>
           </div>
         {{ end }}
       </div>
-    
+
+      <div class="row justify-content-md-center">
+        <div class="col-md-auto">
+          <nav aria-label="Page navigation example">
+            <ul class="pagination">
+              {{ if .hasPrevious }}
+                <li class="page-item"><a class="page-link" href="{{ .previousURL }}">Previous</a></li>
+              {{ else }}
+                <li class="page-item disabled"><a class="page-link" href="{{ .previousURL }}">Previous</a></li>
+              {{ end }}
+
+              {{ range .pages }}
+                {{ if .Active }}
+                  <li class="page-item active"><a class="page-link" href="{{ .URL }}">{{ .Text }}</a></li>
+                {{ else }}
+                  <li class="page-item"><a class="page-link" href="{{ .URL }}">{{ .Text }}</a></li>
+                {{ end }}                
+              {{ end }}
+            
+              {{ if .hasNext }}
+                <li class="page-item"><a class="page-link" href="{{ .nextURL }}">Next</a></li>
+              {{ else }}
+                <li class="page-item disabled"><a class="page-link" href="{{ .nextURL }}">Next</a></li>
+              {{ end }}
+            </ul>
+          </nav>
+        </div>
+      </div>
+
       <footer class="pt-4 my-md-5 pt-md-5 border-top">
         <div class="row">
           <div class="col-12 col-md">
