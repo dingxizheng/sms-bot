@@ -51,7 +51,6 @@ func ReadMessages(num models.PhoneNumber) {
 	if len(messages) == 0 {
 		updates = bson.M{
 			"last_read_at": time.Now(),
-			"next_read_at": time.Now().Add(5 * time.Second),
 			"running":      false,
 		}
 	}
