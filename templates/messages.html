@@ -10,7 +10,7 @@
   <div>
     <button id="refresh-button" type="button" class="btn btn-outline-primary btn-md" onclick="window.location.reload();">
       <span id="refresh-button-spinner" class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
-      <span id="refresh-button-text" class="sr-only">Preparing...</span>
+      <span id="refresh-button-text" class="sr-only">Checking...</span>
     </button>
   </div>
   <div class="ms-3">
@@ -77,7 +77,7 @@
     } else {
       document.getElementById("refresh-button").setAttribute("disabled", true);
       // document.getElementById("refresh-button-spinner").style.display = "none";
-      document.getElementById("refresh-button-text").innerHTML = "Preparing (" + seconds +"s)";
+      document.getElementById("refresh-button-text").innerHTML = "Checking (" + seconds +"s)";
     }
   }, 500);
 </script>
