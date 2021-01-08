@@ -6,23 +6,17 @@
   <p class="lead">Receive your SMS online with our virtual numbers for free!</p>
 </div>
 
-<div class="row justify-content-md-center">
-  <div class="col-md-auto gut-2">
-    <button type="button" class="btn btn-outline-primary btn-md" onclick="window.location.reload();">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-counterclockwise" viewBox="0 0 16 16">
-        <path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2v1z"/>
-        <path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466z"/>
-      </svg>
-      Refresh
+<div class="d-flex justify-content-center">
+  <div>
+    <button id="refresh-button" type="button" class="btn btn-outline-primary btn-md" onclick="window.location.reload();">
+      <span id="refresh-button-spinner" class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+      <span id="refresh-button-text" class="sr-only">Preparing...</span>
     </button>
-
-    <button type="button" class="btn btn-outline-primary btn-md" onclick="window.location.reload();">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-counterclockwise" viewBox="0 0 16 16">
-        <path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2v1z"/>
-        <path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466z"/>
-      </svg>
-      Update Messages
-    </button>
+  </div>
+  <div class="ms-3">
+    <a href="/free-sms-messages/{{ .randomNumber.Provider }}/{{ .randomNumber.ProviderID }}" type="button" class="btn btn-outline-primary btn-md" onclick="window.location.reload();">
+      Next Number
+    </a>
   </div>
 </div>
 
@@ -47,5 +41,45 @@
     {{ end }}
   </tbody>
 </table>
+
+<script>
+  // Set the date we're counting down to
+  var countDownDate = new Date(parseInt({{.nextReadAt}})).getTime();
+  var counter = 0;
+  // Update the count down every 1 second
+  var x = setInterval(function() {
+    counter ++;
+    var dots = counter % 5;
+    var progressBar = ""
+    for (var i = 0; i < dots; i ++) {
+      progressBar = progressBar + "."
+    }
+
+    for (var i = 0; i < 5 - dots; i ++) {
+      progressBar = progressBar + "&nbsp;"
+    }
+
+    // Get today's date and time
+    var now = new Date().getTime();
+  
+    // Find the distance between now and the count down date
+    var distance = countDownDate - now;
+  
+    // Time calculations for days, hours, minutes and seconds
+    var seconds = Math.floor(distance / 1000);
+  
+    // If the count down is finished, write some text
+    if (distance < 1000) {
+      clearInterval(x);
+      document.getElementById("refresh-button").removeAttribute("disabled");
+      document.getElementById("refresh-button-spinner").style.display = "none";
+      document.getElementById("refresh-button-text").innerHTML = "Refresh Page";
+    } else {
+      document.getElementById("refresh-button").setAttribute("disabled", true);
+      // document.getElementById("refresh-button-spinner").style.display = "none";
+      document.getElementById("refresh-button-text").innerHTML = "Preparing (" + seconds +"s)";
+    }
+  }, 500);
+</script>
 
 {{ template "footer.html" .}} 

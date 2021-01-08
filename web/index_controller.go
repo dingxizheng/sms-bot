@@ -5,16 +5,23 @@ import (
 	"log"
 	"math"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/dingxizheng/sms-bot/db"
 	"github.com/dingxizheng/sms-bot/providers/models"
 	"github.com/gin-gonic/gin"
+	"github.com/pariz/gountries"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+var query = gountries.New()
+
 const pageSize = 30
+
+var countryCache = map[string]string{}
 
 type Page struct {
 	URL     string
@@ -55,11 +62,23 @@ func pagination(c int, m int) []Page {
 	return pagesWithDots
 }
 
+func findCountryName(countryCode string) string {
+	name := countryCache[countryCode]
+	if len(name) != 0 {
+		return name
+	}
+
+	country, _ := query.FindCountryByAlpha(countryCode)
+	countryCache[countryCode] = country.Name.Common
+	return country.Name.Common
+}
+
 func MountIndexController(router *gin.Engine) {
 	router.GET("/", FindNumbers)
 	router.GET("/home", FindNumbers)
 	router.GET("/phone-numbers", FindNumbers)
-	router.GET("/phone-numbers/:page", FindNumbers)
+	// router.GET("/phone-numbers/:page", FindNumbers)
+	router.GET("/phone-numbers/:country/:page", FindNumbers)
 	router.GET("/index", FindNumbers)
 
 	router.GET("/free-sms-messages/:provider/:providerId", FindMessages)
@@ -68,15 +87,26 @@ func MountIndexController(router *gin.Engine) {
 
 func FindNumbers(c *gin.Context) {
 	page := c.Param("page")
+	country := c.Param("country")
+
+	if len(country) == 0 {
+		country = "all-countries"
+	}
+
+	filters := bson.M{"status": "online"}
+	if country != "all-countries" {
+		filters["country"] = strings.ToUpper(country)
+	}
+
 	pageNum, err := strconv.Atoi(page)
 	if err != nil || pageNum <= 0 {
 		pageNum = 1
 	}
 
 	coll := db.Collection("numbers")
-	totalNums, _ := coll.CountDocuments(db.DefaultCtx(), bson.M{"status": "online"})
+	totalNums, _ := coll.CountDocuments(db.DefaultCtx(), filters)
 	totalPages := int(math.Ceil(float64(totalNums) / float64(pageSize)))
-	cursor, err := coll.Find(db.DefaultCtx(), bson.M{"status": "online"}, options.Find().SetLimit(pageSize).SetSkip(int64((pageNum-1)*pageSize)))
+	cursor, err := coll.Find(db.DefaultCtx(), filters, options.Find().SetLimit(pageSize).SetSkip(int64((pageNum-1)*pageSize)))
 
 	if err != nil {
 		log.Printf("Failed to fetch phone numbers, error: %+v", err)
@@ -88,6 +118,7 @@ func FindNumbers(c *gin.Context) {
 	for cursor.Next(db.DefaultCtx()) {
 		num := models.PhoneNumber{}
 		cursor.Decode(&num)
+		num.CountryName = findCountryName(num.Country)
 		numbers = append(numbers, num)
 	}
 
@@ -98,16 +129,16 @@ func FindNumbers(c *gin.Context) {
 	}
 
 	pages := pagination(pageNum, totalPages)
-	for idx, _ := range pages {
-		pages[idx].URL = fmt.Sprintf("/phone-numbers/%d", pages[idx].Current)
+	for idx := range pages {
+		pages[idx].URL = fmt.Sprintf("/phone-numbers/%s/%d", country, pages[idx].Current)
 		if pageNum == pages[idx].Current {
 			pages[idx].Active = true
 		} else {
 			pages[idx].Active = false
 		}
 	}
-	previousURL := fmt.Sprintf("/phone-numbers/%d", pageNum-1)
-	nextURL := fmt.Sprintf("/phone-numbers/%d", pageNum+1)
+	previousURL := fmt.Sprintf("/phone-numbers/%s/%d", country, pageNum-1)
+	nextURL := fmt.Sprintf("/phone-numbers/%s/%d", country, pageNum+1)
 
 	c.HTML(200, "index.html", gin.H{"numbers": numbers, "hasPrevious": pageNum > 1, "hasNext": pageNum < totalPages, "previousURL": previousURL, "nextURL": nextURL, "pages": pages})
 }
@@ -119,6 +150,18 @@ func FindMessages(c *gin.Context) {
 	coll := db.Collection("numbers")
 	var phoneNumber models.PhoneNumber
 	err := coll.FindOne(db.DefaultCtx(), bson.M{"provider": provider, "provider_id": providerID}).Decode(&phoneNumber)
+
+	pipeline := mongo.Pipeline{
+		{{"$match", bson.D{{"status", "online"}}}},
+		{{"$sample", bson.D{{"size", 1}}}},
+	}
+
+	var randomNum models.PhoneNumber
+	aggregateRs, _ := coll.Aggregate(db.DefaultCtx(), pipeline)
+	for aggregateRs.Next(db.DefaultCtx()) {
+		aggregateRs.Decode(&randomNum)
+		break
+	}
 
 	if err != nil {
 		log.Printf("Failed to fetch phone numbers, error: %+v", err)
@@ -135,12 +178,13 @@ func FindMessages(c *gin.Context) {
 		}
 	} else if !phoneNumber.NextReadAt.Equal(time.Time{}) && !phoneNumber.NextReadAt.After(time.Now()) {
 		shouldScheduleJob = true
-	} else if phoneNumber.NextReadAt.Equal(time.Time{}) && phoneNumber.LastReadAt.Add(10*time.Second).Before(time.Now()) {
+	} else if phoneNumber.NextReadAt.Equal(time.Time{}) && phoneNumber.LastReadAt.Add(8*time.Second).Before(time.Now()) {
 		shouldScheduleJob = true
 	}
 
 	if shouldScheduleJob {
-		nextRunAt := time.Now().Add(10 * time.Second)
+		nextRunAt := time.Now().Add(8 * time.Second)
+		phoneNumber.NextReadAt = nextRunAt
 		log.Printf("Schedule read message job for number %v at %v", phoneNumber.RawNumber, nextRunAt)
 		coll.UpdateOne(db.DefaultCtx(), bson.M{"_id": phoneNumber.ID}, bson.M{"$set": bson.M{"next_read_at": nextRunAt}})
 	}
@@ -151,5 +195,5 @@ func FindMessages(c *gin.Context) {
 		return
 	}
 
-	c.HTML(200, "messages.html", gin.H{"messages": messages, "number": phoneNumber})
+	c.HTML(200, "messages.html", gin.H{"messages": messages, "randomNumber": randomNum, "number": phoneNumber, "nextReadAt": fmt.Sprintf("%d000", phoneNumber.NextReadAt.Add(3*time.Second).Unix())})
 }

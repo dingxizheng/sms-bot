@@ -11,7 +11,18 @@
         <div class="col">
           <div class="card mb-4 shadow-sm">
             <div class="card-header">
-              <img src="https://www.countryflags.io/{{ .Country }}/flat/64.png">
+              <div class="d-flex flex-row align-items-center">
+                <div>
+                  <a href="/phone-numbers/{{ .Country }}/1">
+                    <img style="width: 40px;" src="https://www.countryflags.io/{{ .Country }}/flat/64.png">
+                  </a>
+                </div>
+                <div class="ms-2">
+                  <a style="text-decoration: none;" href="/phone-numbers/{{ .Country }}/1">
+                    {{ .CountryName }}
+                  </a>
+                </div>
+              </div>
             </div>
             <div class="card-body my-2">
               <h3 class="card-title pricing-card-title"><small class="text-muted">+{{ .CountryCode }}</small>&nbsp;{{ .Number }}</h3>

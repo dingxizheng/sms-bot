@@ -20,6 +20,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/motemen/gore v0.5.1 // indirect
+	github.com/pariz/gountries v0.0.0-20200430155801-1c6a393df9c7
 	github.com/peterh/liner v1.2.1 // indirect
 	github.com/thinkerou/favicon v0.1.0
 	github.com/ttacon/builder v0.0.0-20170518171403-c099f663e1c2 // indirect

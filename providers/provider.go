@@ -25,6 +25,7 @@ func ProviderClient(num models.PhoneNumber) models.SMSProvider {
 	return nil
 }
 
+// ReadMessages - read phone messages
 func ReadMessages(num models.PhoneNumber) {
 	log.Printf("Reading messages for number: %v, provider: %v", num.RawNumber, num.Provider)
 
@@ -59,12 +60,17 @@ func ReadMessages(num models.PhoneNumber) {
 		"next_read_at": "",
 	}
 
-	coll.UpdateOne(db.DefaultCtx(), bson.M{"_id": num.ID}, bson.D{
-		{"$set", updates},
-		{"$unset", unsets},
-	})
+	coll.UpdateOne(
+		db.DefaultCtx(),
+		bson.M{"_id": num.ID},
+		bson.D{
+			{"$set", updates},
+			{"$unset", unsets},
+		},
+	)
 }
 
+// ReadMessagesForNewNumbers - reads recent messages for newly added phone numbers
 func ReadMessagesForNewNumbers() {
 	coll := db.Collection("numbers")
 	for {
@@ -78,10 +84,11 @@ func ReadMessagesForNewNumbers() {
 	}
 }
 
+// ReadMessagesForScheduledNumbers - reads most recent messages for a given number
 func ReadMessagesForScheduledNumbers() {
 	coll := db.Collection("numbers")
 	for {
-		time.Sleep(3 * time.Second)
+		time.Sleep(2 * time.Second)
 		cursor, _ := coll.Find(db.DefaultCtx(), bson.M{"status": "online", "next_read_at": bson.M{"$gte": time.Now()}})
 		for cursor.Next(db.DefaultCtx()) {
 			num := models.PhoneNumber{}
@@ -91,12 +98,13 @@ func ReadMessagesForScheduledNumbers() {
 	}
 }
 
+// ScanPhoneNumbers - finds nubmers
 func ScanPhoneNumbers() {
 	client1 := receivesmss.Client{}
 	client2 := sms24.Client{}
 	for {
+		time.Sleep(1 * time.Hour)
 		client2.StartCrawling()
 		client1.StartCrawling()
-		time.Sleep(20 * time.Minute)
 	}
 }

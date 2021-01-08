@@ -20,6 +20,7 @@ type PhoneNumber struct {
 	LastReadAt  time.Time          `json:"last_read_at" bson:"last_read_at,omitempty"`
 	NextReadAt  time.Time          `json:"next_read_at" bson:"next_read_at,omitempty"`
 	Messages    []Message          `json:"messages" bson:"messages,omitempty"`
+	CountryName string             `json:"-" bson:"-"`
 }
 
 type Message struct {
