@@ -173,20 +173,20 @@ func FindMessages(c *gin.Context) {
 	shouldScheduleJob := false
 
 	if phoneNumber.LastReadAt.Equal(time.Time{}) {
-		if !phoneNumber.NextReadAt.After(time.Now()) {
+		if phoneNumber.NextReadAt.Before(time.Now()) {
 			shouldScheduleJob = true
 		}
-	} else if !phoneNumber.NextReadAt.Equal(time.Time{}) && !phoneNumber.NextReadAt.After(time.Now()) {
-		shouldScheduleJob = true
-	} else if phoneNumber.NextReadAt.Equal(time.Time{}) && phoneNumber.LastReadAt.Add(8*time.Second).Before(time.Now()) {
+	} else if phoneNumber.NextReadAt.Equal(time.Time{}) || phoneNumber.NextReadAt.Before(time.Now()) {
 		shouldScheduleJob = true
 	}
 
 	if shouldScheduleJob {
-		nextRunAt := time.Now().Add(8 * time.Second)
+		nextRunAt := time.Now().Add(5 * time.Second)
 		phoneNumber.NextReadAt = nextRunAt
-		log.Printf("Schedule read message job for number %v at %v", phoneNumber.RawNumber, nextRunAt)
+		log.Printf("Plan to read messages for number %v at %v", phoneNumber.RawNumber, nextRunAt)
 		coll.UpdateOne(db.DefaultCtx(), bson.M{"_id": phoneNumber.ID}, bson.M{"$set": bson.M{"next_read_at": nextRunAt}})
+	} else {
+		log.Printf("Aleady planed to read messages for number %v at %v", phoneNumber.RawNumber, phoneNumber.NextReadAt)
 	}
 
 	if err != nil {
@@ -195,5 +195,5 @@ func FindMessages(c *gin.Context) {
 		return
 	}
 
-	c.HTML(200, "messages.html", gin.H{"messages": messages, "randomNumber": randomNum, "number": phoneNumber, "nextReadAt": fmt.Sprintf("%d000", phoneNumber.NextReadAt.Add(3*time.Second).Unix())})
+	c.HTML(200, "messages.html", gin.H{"messages": messages, "randomNumber": randomNum, "number": phoneNumber, "nextReadAt": fmt.Sprintf("%d000", phoneNumber.NextReadAt.Add(4*time.Second).Unix())})
 }

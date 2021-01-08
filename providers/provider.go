@@ -27,7 +27,7 @@ func ProviderClient(num models.PhoneNumber) models.SMSProvider {
 
 // ReadMessages - read phone messages
 func ReadMessages(num models.PhoneNumber) {
-	log.Printf("Reading messages for number: %v, provider: %v", num.RawNumber, num.Provider)
+	log.Printf("Reading messages for number(%v) %v at %v", num.Provider, num.RawNumber, num.NextReadAt)
 
 	var currentJob models.PhoneNumber
 	coll := db.Collection("numbers")
@@ -89,7 +89,7 @@ func ReadMessagesForScheduledNumbers() {
 	coll := db.Collection("numbers")
 	for {
 		time.Sleep(2 * time.Second)
-		cursor, _ := coll.Find(db.DefaultCtx(), bson.M{"status": "online", "next_read_at": bson.M{"$gte": time.Now()}})
+		cursor, _ := coll.Find(db.DefaultCtx(), bson.M{"status": "online", "next_read_at": bson.M{"$lte": time.Now()}})
 		for cursor.Next(db.DefaultCtx()) {
 			num := models.PhoneNumber{}
 			cursor.Decode(&num)
