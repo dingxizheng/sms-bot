@@ -39,3 +39,9 @@ type SMSProvider interface {
 	FetchNumbers(page int) []PhoneNumber
 	FetchMessages(number string, page int) []Message
 }
+
+type SMSCountry struct {
+	Country     string `bson:"_id,omitempty"`
+	Count       int    `json:"count" bson:"count"`
+	CountryName string `json:"-" bson:"-"`
+}

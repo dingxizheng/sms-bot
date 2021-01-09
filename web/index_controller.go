@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -83,6 +84,18 @@ func MountIndexController(router *gin.Engine) {
 
 	router.GET("/free-sms-messages/:provider/:providerId", FindMessages)
 	router.GET("/messages", FindMessages)
+
+	router.GET("/countries", FindCountries)
+	router.GET("/privacy", func(c *gin.Context) {
+		c.HTML(
+			http.StatusOK,
+			"privacy.html",
+			gin.H{
+				"title": "Web",
+				"url":   "./web.json",
+			},
+		)
+	})
 }
 
 func FindNumbers(c *gin.Context) {
@@ -196,4 +209,31 @@ func FindMessages(c *gin.Context) {
 	}
 
 	c.HTML(200, "messages.html", gin.H{"messages": messages, "randomNumber": randomNum, "number": phoneNumber, "nextReadAt": fmt.Sprintf("%d000", phoneNumber.NextReadAt.Add(4*time.Second).Unix())})
+}
+
+// FindCountries - show all available countries
+func FindCountries(c *gin.Context) {
+	matchStage := bson.M{"status": "online", "country": bson.M{"$ne": ""}}
+	groupStage := bson.M{"_id": "$country", "count": bson.M{"$sum": 1}}
+	sortStage := bson.M{"count": -1}
+
+	coll := db.Collection("numbers")
+
+	pipeline := mongo.Pipeline{
+		{{"$match", matchStage}},
+		{{"$group", groupStage}},
+		{{"$sort", sortStage}},
+	}
+
+	cursor, _ := coll.Aggregate(db.DefaultCtx(), pipeline)
+
+	var countries = make([]models.SMSCountry, 0)
+	for cursor.Next(db.DefaultCtx()) {
+		country := models.SMSCountry{}
+		cursor.Decode(&country)
+		country.CountryName = findCountryName(country.Country)
+		countries = append(countries, country)
+	}
+
+	c.HTML(200, "countries.html", gin.H{"countries": countries})
 }
