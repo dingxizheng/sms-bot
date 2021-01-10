@@ -13,6 +13,7 @@ import (
 	"github.com/dingxizheng/sms-bot/providers/models"
 	"github.com/gin-gonic/gin"
 	"github.com/pariz/gountries"
+	uuid "github.com/satori/go.uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -160,6 +161,7 @@ func FindNumbers(c *gin.Context) {
 func FindMessages(c *gin.Context) {
 	provider := c.Param("provider")
 	providerID := c.Param("providerId")
+	autotriggering, _ := c.Cookie("autotriggering")
 	coll := db.Collection("numbers")
 	var phoneNumber models.PhoneNumber
 	err := coll.FindOne(db.DefaultCtx(), bson.M{"provider": provider, "provider_id": providerID}).Decode(&phoneNumber)
@@ -193,7 +195,7 @@ func FindMessages(c *gin.Context) {
 		shouldScheduleJob = true
 	}
 
-	if shouldScheduleJob {
+	if shouldScheduleJob && len(autotriggering) == 0 {
 		nextRunAt := time.Now().Add(5 * time.Second)
 		phoneNumber.NextReadAt = nextRunAt
 		log.Printf("Plan to read messages for number %v at %v", phoneNumber.RawNumber, nextRunAt)
@@ -208,7 +210,25 @@ func FindMessages(c *gin.Context) {
 		return
 	}
 
-	c.HTML(200, "messages.html", gin.H{"messages": messages, "randomNumber": randomNum, "number": phoneNumber, "nextReadAt": fmt.Sprintf("%d000", phoneNumber.NextReadAt.Add(4*time.Second).Unix())})
+	// Create channel
+	channelID := uuid.NewV4()
+	providerNumber := phoneNumber.Provider + "|" + phoneNumber.ProviderID
+	_, exists := NumberChannels[channelID.String()]
+	if !exists {
+		NumberChannels[channelID.String()] = &WebClient{
+			Channel: make(chan int),
+			Number:  providerNumber,
+		}
+	}
+
+	c.HTML(200, "messages.html", gin.H{
+		"messages":       messages,
+		"randomNumber":   randomNum,
+		"number":         phoneNumber,
+		"nextReadAt":     fmt.Sprintf("%d000", phoneNumber.NextReadAt.Add(4*time.Second).Unix()),
+		"channelID":      channelID.String(),
+		"providerNumber": providerNumber,
+	})
 }
 
 // FindCountries - show all available countries

@@ -11,6 +11,7 @@ require (
 	github.com/go-resty/resty/v2 v2.3.0 // indirect
 	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/google/martian v2.1.0+incompatible // indirect
+	github.com/gorilla/websocket v1.4.2
 	github.com/joho/godotenv v1.3.0
 	github.com/json-iterator/go v1.1.10 // indirect
 	github.com/karrick/tparse/v2 v2.8.2
@@ -22,6 +23,7 @@ require (
 	github.com/motemen/gore v0.5.1 // indirect
 	github.com/pariz/gountries v0.0.0-20200430155801-1c6a393df9c7
 	github.com/peterh/liner v1.2.1 // indirect
+	github.com/satori/go.uuid v1.2.0
 	github.com/thinkerou/favicon v0.1.0
 	github.com/ttacon/builder v0.0.0-20170518171403-c099f663e1c2 // indirect
 	github.com/ttacon/libphonenumber v1.1.0

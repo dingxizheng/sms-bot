@@ -41,5 +41,45 @@
     {{ end }}
   </tbody>
 </table>
+<script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
+<script type="text/javascript">
+  $(function() {
+    var ws;
+
+    if (window.WebSocket === undefined) {
+      console.warn("Your browser does not support WebSockets");
+      return;
+    } else {
+      ws = initWS();
+    }
+
+    function initWS() {
+      Cookies.remove('autotriggering');
+      var host = window.location.host;
+      if (host === "localhost") {
+        host = host+ ":8080";
+      }
+
+      var socket = new WebSocket("ws://" + host + "/ws?id={{ .channelID }}&number={{ .providerNumber }}");
+      // var container = $("#container");
+      socket.onopen = function() {
+        console.warn("Socket is open");
+      };
+      socket.onmessage = function (e) {
+        var data = JSON.parse(e.data)
+        if (data.refresh) {
+          console.warn("Refresh command received.");
+          Cookies.set('autotriggering', 'true')
+          window.location.reload();
+        }
+      }
+      socket.onclose = function () {
+        console.warn("Socket closed");
+      }
+
+      return socket;
+    }
+  });
+</script>
 
 {{ template "footer.html" .}} 

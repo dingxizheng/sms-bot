@@ -2,6 +2,7 @@ package providers
 
 import (
 	"log"
+	"strings"
 	"time"
 
 	"github.com/dingxizheng/sms-bot/db"
@@ -9,6 +10,7 @@ import (
 	"github.com/dingxizheng/sms-bot/providers/receivesmss"
 	"github.com/dingxizheng/sms-bot/providers/sms24"
 	"github.com/dingxizheng/sms-bot/providers/yinsiduanxin"
+	"github.com/dingxizheng/sms-bot/web"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -67,6 +69,19 @@ func ReadMessages(num models.PhoneNumber) {
 			{"$unset", unsets},
 		},
 	)
+
+	if len(messages) == 0 {
+		return
+	}
+
+	go func() {
+		providerNumber := num.Provider + "|" + num.ProviderID
+		for _, client := range web.NumberChannels {
+			if strings.EqualFold(client.Number, providerNumber) {
+				client.Channel <- 1
+			}
+		}
+	}()
 }
 
 // ReadMessagesForNewNumbers - reads recent messages for newly added phone numbers
