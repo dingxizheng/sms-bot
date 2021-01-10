@@ -21,7 +21,7 @@ import (
 
 const (
 	smsNumberListApi = "https://www.yinsiduanxin.com/phone-number/page/%d.html"
-	smsMessageApi    = "https://www.yinsiduanxin.com/china-phone-number/verification-code-%s/%d.html"
+	smsMessageApi    = "https://www.yinsiduanxin.com/china-phone-number/verification-code-%s/0.html"
 	timeLayout       = "2006-01-02 15:04:05-0700"
 	maxPage          = 100
 )
@@ -43,11 +43,15 @@ func (pv *Client) Name() string {
 	return ProviderName
 }
 
+func (pv *Client) PhoneNubmerURL(number models.PhoneNumber) string {
+	return fmt.Sprintf(smsMessageApi, number.ProviderID)
+}
+
 func (pv *Client) StartCrawling() {
 	coll := db.Collection("numbers")
-	log.Printf("Start fetching numbers...")
+	log.Printf("Start crawling numbers from site: YinSiDuanXin...")
 	for page := 1; page <= maxPage; page++ {
-		numbers := pv.FetchNumbers(page)
+		numbers := pv.FetchNumbers(fmt.Sprintf(smsNumberListApi, page), page)
 		for _, number := range numbers {
 			var existingNum models.PhoneNumber
 			filter := bson.M{"provider": number.Provider, "provider_id": number.ProviderID}
@@ -64,7 +68,7 @@ func (pv *Client) StartCrawling() {
 				number.CreatedAt = time.Now()
 				coll.InsertOne(db.DefaultCtx(), number)
 			} else {
-				log.Printf("Replacing number %+v", number)
+				log.Printf("Updating number %+v", number)
 				coll.UpdateOne(db.DefaultCtx(), filter, bson.M{"status": number.Status})
 			}
 		}
@@ -73,27 +77,13 @@ func (pv *Client) StartCrawling() {
 	}
 }
 
-func (pv *Client) FetchNumbers(page int) []models.PhoneNumber {
-	url := fmt.Sprintf(smsNumberListApi, page)
-	log.Printf("Fetching numbers from URL %v", url)
-
-	req, err := http.NewRequest("GET", fmt.Sprintf(smsNumberListApi, page), nil)
-	setDefaultHeaders(req)
-
-	res, _ := httpClient.Do(req)
-	if err != nil {
-		log.Printf("Failed to load page, error: %v", err.Error())
-		return []models.PhoneNumber{}
-	}
-	defer res.Body.Close()
-
-	// Load the HTML document
-	doc, err := goquery.NewDocumentFromReader(res.Body)
-	if err != nil {
-		log.Printf("Failed to parse document, error: %v", err.Error())
-	}
-
+func (pv *Client) FetchNumbers(url string, page int) []models.PhoneNumber {
 	numbers := make([]models.PhoneNumber, 0)
+	// Load the HTML document
+	doc, err := models.FetchPage(httpClient, url, setDefaultHeaders)
+	if err != nil {
+		return numbers
+	}
 
 	doc.Find("div.layui-card").Each(func(i int, s *goquery.Selection) {
 		status := "online"
@@ -133,24 +123,13 @@ func (pv *Client) FetchNumbers(page int) []models.PhoneNumber {
 }
 
 // FetchMessages returns list of SMS messages
-func (pv *Client) FetchMessages(number string, page int) []models.Message {
-	pageURL := fmt.Sprintf(smsMessageApi, number, page)
-	log.Printf("Fetching messages from url %v", pageURL)
-	req, err := http.NewRequest("GET", pageURL, nil)
-	setDefaultHeaders(req)
-	res, _ := httpClient.Do(req)
-	if err != nil {
-		log.Print(err)
-	}
-	defer res.Body.Close()
-
-	// Load the HTML document
-	doc, err := goquery.NewDocumentFromReader(res.Body)
-	if err != nil {
-		log.Print(err)
-	}
-
+func (pv *Client) FetchMessages(url string, page int) []models.Message {
 	messages := make([]models.Message, 0)
+	// Load the HTML document
+	doc, err := models.FetchPage(httpClient, url, setDefaultHeaders)
+	if err != nil {
+		return messages
+	}
 
 	doc.Find("table.layui-table tbody tr").Each(func(i int, s *goquery.Selection) {
 		from := s.Find("td:nth-child(1) a").Text()
@@ -163,11 +142,10 @@ func (pv *Client) FetchMessages(number string, page int) []models.Message {
 
 		receivedAtTime, _ := time.Parse(timeLayout, receivedAt+"+0800")
 		messages = append(messages, models.Message{
-			Provider:      pv.Name(),
-			PhoneNumberID: number,
-			From:          from,
-			Text:          strings.TrimSpace(text),
-			ReceivedAt:    receivedAtTime,
+			Provider:   pv.Name(),
+			From:       from,
+			Text:       strings.TrimSpace(text),
+			ReceivedAt: receivedAtTime,
 		})
 	})
 

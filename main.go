@@ -15,11 +15,13 @@ func main() {
 	// // countryCode := libphonenumber.GetCountryCodeForRegion(regionNumber)
 	// log.Printf("GOOD nubmer: %v", regionNumber)
 
-	// client2 := sms24.Client{}
-	// client2.StartCrawling()
-	// messages := client2.FetchNumbers(1)
+	// client2 := yunjiema.Client{}
+	// // client2.StartCrawling()
+	// messages := client2.FetchCountryURLs("https://yunjiema.net/guojiadiqu/1.html", 0)
 	// log.Printf("Messages: %+v", messages)
 	// client := yinsiduanxin.Client{}
+
+	// client2.StartCrawling()
 
 	// // client.StartCrawling()
 	// // log.Printf("Numbers: %+v", numbers)

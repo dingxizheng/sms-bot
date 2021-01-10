@@ -57,8 +57,8 @@
       Cookies.remove('autotriggering');
       var host = window.location.host;
       var webSocketUrl = "wss://" + host + "/ws?id={{ .channelID }}&number={{ .providerNumber }}"
-      if (host === "localhost") {
-        webSocketUrl = "ws://" + host+ ":8080" + "/ws?id={{ .channelID }}&number={{ .providerNumber }}"
+      if (host === "localhost:8080") {
+        webSocketUrl = "ws://" + host + "/ws?id={{ .channelID }}&number={{ .providerNumber }}"
       }
 
       var socket = new WebSocket(webSocketUrl);

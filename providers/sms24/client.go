@@ -29,7 +29,7 @@ const (
 
 type Client struct{}
 
-var rl = rate.NewLimiter(rate.Every(1*time.Second), 2)
+var rl = rate.NewLimiter(rate.Every(1*time.Second), 1)
 var httpClient = httpclient.NewClient(rl)
 
 // Name of the provider
@@ -45,11 +45,15 @@ func (pv *Client) Name() string {
 	return ProviderName
 }
 
+func (pv *Client) PhoneNubmerURL(number models.PhoneNumber) string {
+	return "https://sms24.me/number-" + number.ProviderID + "-%d"
+}
+
 func (pv *Client) StartCrawling() {
 	coll := db.Collection("numbers")
-	log.Printf("Start fetching numbers...")
+	log.Printf("Start crawling numbers from site: SMS24...")
 	for page := 1; page <= maxPage; page++ {
-		numbers := pv.FetchNumbers(page)
+		numbers := pv.FetchNumbers(fmt.Sprintf(smsNumberListApi, page), page)
 		for _, number := range numbers {
 			var existingNum models.PhoneNumber
 			filter := bson.M{"provider": number.Provider, "provider_id": number.ProviderID}
@@ -66,7 +70,7 @@ func (pv *Client) StartCrawling() {
 				number.CreatedAt = time.Now()
 				coll.InsertOne(db.DefaultCtx(), number)
 			} else {
-				log.Printf("Replacing number %+v", number)
+				log.Printf("Updating number %+v", number)
 				coll.UpdateOne(db.DefaultCtx(), filter, bson.M{"status": number.Status})
 			}
 		}
@@ -75,13 +79,11 @@ func (pv *Client) StartCrawling() {
 	}
 }
 
-func (pv *Client) FetchNumbers(page int) []models.PhoneNumber {
+func (pv *Client) FetchNumbers(url string, page int) []models.PhoneNumber {
 	numbers := make([]models.PhoneNumber, 0)
-	url := fmt.Sprintf(smsNumberListApi, page)
 	// Load the HTML document
 	doc, err := models.FetchPage(httpClient, url, setDefaultHeaders)
 	if err != nil {
-		log.Printf("Failed to load page %v , error: %v", url, err.Error())
 		return numbers
 	}
 
@@ -119,15 +121,14 @@ func (pv *Client) FetchNumbers(page int) []models.PhoneNumber {
 }
 
 // FetchMessages returns list of SMS messages
-func (pv *Client) FetchMessages(number string, page int) []models.Message {
+func (pv *Client) FetchMessages(url string, page int) []models.Message {
 	messages := make([]models.Message, 0)
 
-	for step := 1; step < 3; step++ {
-		url := fmt.Sprintf(smsMessageApi, number, step)
+	for step := 1; step < 2; step++ {
+		url := fmt.Sprintf(url, step)
 		// Load the HTML document
 		doc, err := models.FetchPage(httpClient, url, setDefaultHeaders)
 		if err != nil {
-			log.Printf("Failed to load page %v , error: %v", url, err.Error())
 			return messages
 		}
 
@@ -147,11 +148,10 @@ func (pv *Client) FetchMessages(number string, page int) []models.Message {
 			receivedAtTime := time.Unix(receivedAtTimestamp, 0)
 
 			messages = append(messages, models.Message{
-				Provider:      pv.Name(),
-				PhoneNumberID: number,
-				From:          from,
-				Text:          strings.TrimSpace(text),
-				ReceivedAt:    receivedAtTime,
+				Provider:   pv.Name(),
+				From:       from,
+				Text:       strings.TrimSpace(text),
+				ReceivedAt: receivedAtTime,
 			})
 		})
 	}

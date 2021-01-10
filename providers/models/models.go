@@ -24,24 +24,24 @@ type PhoneNumber struct {
 }
 
 type Message struct {
-	ID            primitive.ObjectID `bson:"_id,omitempty"`
-	Provider      string             `json:"provider" bson:"provider"`
-	PhoneNumberID string             `json:"number_id" bson:"number_id"`
-	From          string             `json:"from" bson:"from"`
-	Text          string             `json:"text" bson:"text"`
-	ReceivedAt    time.Time          `json:"received_at" bson:"received_at"`
-	CreatedAt     time.Time          `json:"created_at" bson:"created_at"`
-}
-
-type SMSProvider interface {
-	Name() string
-	StartCrawling()
-	FetchNumbers(page int) []PhoneNumber
-	FetchMessages(number string, page int) []Message
+	ID         primitive.ObjectID `bson:"_id,omitempty"`
+	Provider   string             `json:"provider" bson:"provider"`
+	From       string             `json:"from" bson:"from"`
+	Text       string             `json:"text" bson:"text"`
+	ReceivedAt time.Time          `json:"received_at" bson:"received_at"`
+	CreatedAt  time.Time          `json:"created_at" bson:"created_at"`
 }
 
 type SMSCountry struct {
 	Country     string `bson:"_id,omitempty"`
 	Count       int    `json:"count" bson:"count"`
 	CountryName string `json:"-" bson:"-"`
+}
+
+type SMSProvider interface {
+	Name() string
+	PhoneNubmerURL(number PhoneNumber) string
+	StartCrawling()
+	FetchNumbers(url string, page int) []PhoneNumber
+	FetchMessages(url string, page int) []Message
 }

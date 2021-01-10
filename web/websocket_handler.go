@@ -43,14 +43,14 @@ func WSHandler(c *gin.Context) {
 		for {
 			mt, _, err := conn.ReadMessage()
 			if err != nil {
-				log.Printf("Closing websocket connection for number %v", numberChan.Number)
+				log.Printf("Closing websocket connection for number: %v", numberChan.Number)
 				close(closeChan)
 				delete(NumberChannels, id)
 				break
 			}
 
 			if mt != websocket.TextMessage {
-				log.Printf("Closing websocket connection for number %v", numberChan.Number)
+				log.Printf("Closing websocket connection for number: %v", numberChan.Number)
 				close(closeChan)
 				delete(NumberChannels, id)
 				break
@@ -65,7 +65,7 @@ func WSHandler(c *gin.Context) {
 			return
 		case <-numberChan.Channel:
 			if err := conn.WriteJSON(map[string]bool{"refresh": true}); err != nil {
-				log.Printf("Failed to send refresh command for number %v", nummber)
+				log.Printf("Failed to send refresh command for number: %v", nummber)
 			}
 		}
 	}

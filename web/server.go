@@ -12,6 +12,10 @@ func formatAsTimeAgo(t time.Time) string {
 	return timeago.English.Format(t)
 }
 
+func timeString(t time.Time) string {
+	return t.Format("2006-01-02T15:04:05-07:00")
+}
+
 // Start - starts the web server
 func Start() {
 	router := gin.Default()
@@ -19,6 +23,7 @@ func Start() {
 	// Template helper functions
 	router.SetFuncMap(map[string]interface{}{
 		"formatAsTimeAgo": formatAsTimeAgo,
+		"timeString":      timeString,
 	})
 
 	// Load templates
@@ -37,6 +42,9 @@ func Start() {
 
 	// Mount controllers
 	MountIndexController(router)
+
+	// Mount phone number controllers
+	MountPhoneNumberController(router)
 
 	router.Run()
 }

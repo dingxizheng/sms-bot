@@ -1,0 +1,38 @@
+
+<urlset
+      xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+
+<url>
+  <loc>https://freesms-online.com/</loc>
+  <lastmod>2021-01-10T17:11:40+00:00</lastmod>
+  <priority>1.00</priority>
+</url>
+<url>
+  <loc>https://freesms-online.com/countries</loc>
+  <lastmod>2021-01-10T17:11:40+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://freesms-online.com/privacy</loc>
+  <lastmod>2021-01-10T17:11:40+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+{{ range .countries }}
+<url>
+  <loc>https://freesms-online.com/phone-numbers/{{ .Country }}/1</loc>
+  <lastmod>2021-01-10T17:11:40+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+{{ end }}
+
+{{ range .numbers }}
+<url>
+  <loc>https://freesms-online.com/free-sms-messages/{{ .Provider }}/{{ .ProviderID }}</loc>
+  <lastmod>{{ .CreatedAt | timeString }}</lastmod>
+  <priority>0.64</priority>
+</url>
+{{ end }}
+</urlset>

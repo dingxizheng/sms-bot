@@ -10,6 +10,7 @@ import (
 	"github.com/dingxizheng/sms-bot/providers/receivesmss"
 	"github.com/dingxizheng/sms-bot/providers/sms24"
 	"github.com/dingxizheng/sms-bot/providers/yinsiduanxin"
+	"github.com/dingxizheng/sms-bot/providers/yunjiema"
 	"github.com/dingxizheng/sms-bot/web"
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -22,6 +23,8 @@ func ProviderClient(num models.PhoneNumber) models.SMSProvider {
 		return &receivesmss.Client{}
 	} else if num.Provider == sms24.ProviderName {
 		return &sms24.Client{}
+	} else if num.Provider == yunjiema.ProviderName {
+		return &yunjiema.Client{}
 	}
 
 	return nil
@@ -29,20 +32,19 @@ func ProviderClient(num models.PhoneNumber) models.SMSProvider {
 
 // ReadMessages - read phone messages
 func ReadMessages(num models.PhoneNumber) {
-	log.Printf("Reading messages for number(%v) %v at %v", num.Provider, num.RawNumber, num.NextReadAt)
+	log.Printf("Reading messages for number(%v): %+v", num.Provider, num.ProviderID)
 
 	var currentJob models.PhoneNumber
 	coll := db.Collection("numbers")
 	coll.FindOneAndUpdate(db.DefaultCtx(), bson.M{"_id": num.ID, "running": bson.M{"$ne": true}}, bson.M{"$set": bson.M{"running": true}}).Decode(&currentJob)
 
 	if len(currentJob.Number) == 0 {
-		log.Printf("Job %v is already running, skip.", num.RawNumber)
 		return
 	}
 
 	client := ProviderClient(num)
-	messages := client.FetchMessages(num.ProviderID, 0)
-	log.Printf("%d messages found for number: %v", len(messages), num.RawNumber)
+	messages := client.FetchMessages(client.PhoneNubmerURL(num), 0)
+	log.Printf("Found %d messages for number(%v): %+v", len(messages), num.Provider, num.ProviderID)
 
 	updates := bson.M{
 		"messages":     messages,
@@ -61,6 +63,8 @@ func ReadMessages(num models.PhoneNumber) {
 		"next_read_at": "",
 	}
 
+	log.Printf("Updating messages for number(%v): %+v", num.Provider, num.ProviderID)
+
 	coll.UpdateOne(
 		db.DefaultCtx(),
 		bson.M{"_id": num.ID},
@@ -78,6 +82,7 @@ func ReadMessages(num models.PhoneNumber) {
 		providerNumber := num.Provider + "|" + num.ProviderID
 		for _, client := range web.NumberChannels {
 			if strings.EqualFold(client.Number, providerNumber) {
+				log.Printf("Sending update commands to client: %+v", client)
 				client.Channel <- 1
 			}
 		}
@@ -116,9 +121,11 @@ func ReadMessagesForScheduledNumbers() {
 func ScanPhoneNumbers() {
 	client1 := receivesmss.Client{}
 	client2 := sms24.Client{}
+	client3 := yunjiema.Client{}
 	for {
 		time.Sleep(1 * time.Hour)
 		client2.StartCrawling()
 		client1.StartCrawling()
+		client3.StartCrawling()
 	}
 }

@@ -10,7 +10,7 @@ import (
 
 // FetchPage - returns parsed html dom
 func FetchPage(httpClient *httpclient.RLHTTPClient, url string, setDefaultHeaders func(*http.Request)) (*goquery.Document, error) {
-	log.Printf("Fetching page from URL %v", url)
+	log.Printf("Downloading page: %v", url)
 
 	req, err := http.NewRequest("GET", url, nil)
 	setDefaultHeaders(req)
@@ -22,5 +22,11 @@ func FetchPage(httpClient *httpclient.RLHTTPClient, url string, setDefaultHeader
 	defer res.Body.Close()
 
 	// Load the HTML document
-	return goquery.NewDocumentFromReader(res.Body)
+	doc, err := goquery.NewDocumentFromReader(res.Body)
+
+	if err != nil {
+		log.Printf("Failed to download page from url: %v, error: %v", url, err.Error())
+	}
+
+	return doc, err
 }
