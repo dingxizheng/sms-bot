@@ -26,11 +26,6 @@ func WSHandler(c *gin.Context) {
 	id := c.Query("id")
 	nummber := c.Query("nummber")
 
-	if r.Header.Get("Origin") != "http://"+r.Host {
-		http.Error(w, "Origin not allowed", 403)
-		return
-	}
-
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		http.Error(w, "Could not open websocket connection", http.StatusBadRequest)
