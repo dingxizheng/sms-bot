@@ -31,6 +31,7 @@ func Start() {
 
 	// Handle favicon requset
 	router.Use(favicon.New("./favicon.ico"))
+	router.Use(gin.Recovery())
 
 	// Handle not found
 	router.NoRoute(func(c *gin.Context) {
