@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -29,6 +30,10 @@ type Page struct {
 	Text    string
 	Active  bool
 	Current int
+}
+
+func requestURL(url *url.URL) string {
+	return fmt.Sprintf("https://freesms-online.com%v", url.String())
 }
 
 func pagination(c int, m int) []Page {
@@ -91,9 +96,12 @@ func MountPhoneNumberController(router *gin.Engine) {
 func FindNumbers(c *gin.Context) {
 	page := c.Param("page")
 	country := c.Param("country")
+	countryName := country
 
 	if len(country) == 0 {
 		country = "all-countries"
+	} else {
+		countryName = findCountryName(country)
 	}
 
 	filters := bson.M{"status": "online"}
@@ -113,7 +121,7 @@ func FindNumbers(c *gin.Context) {
 
 	if err != nil {
 		log.Printf("Failed to fetch phone numbers, error: %+v", err)
-		c.HTML(500, "index.html", gin.H{"error": "Oops, something went wrong, please try again later"})
+		c.HTML(500, "numbers.html", gin.H{"error": "Oops, something went wrong, please try again later"})
 		return
 	}
 
@@ -127,7 +135,7 @@ func FindNumbers(c *gin.Context) {
 
 	if err != nil {
 		log.Printf("Failed to decode phone numbers, error: %+v", err)
-		c.HTML(500, "index.html", gin.H{"error": "Oops, something went wrong, please try again later"})
+		c.HTML(500, "numbers.html", gin.H{"error": "Oops, something went wrong, please try again later"})
 		return
 	}
 
@@ -143,7 +151,19 @@ func FindNumbers(c *gin.Context) {
 	previousURL := fmt.Sprintf("/phone-numbers/%s/%d", country, pageNum-1)
 	nextURL := fmt.Sprintf("/phone-numbers/%s/%d", country, pageNum+1)
 
-	c.HTML(200, "index.html", gin.H{"numbers": numbers, "hasPrevious": pageNum > 1, "hasNext": pageNum < totalPages, "previousURL": previousURL, "nextURL": nextURL, "pages": pages})
+	c.HTML(200, "numbers.html", gin.H{
+		"numbers":     numbers,
+		"hasPrevious": pageNum > 1,
+		"hasNext":     pageNum < totalPages,
+		"previousURL": previousURL,
+		"nextURL":     nextURL,
+		"pages":       pages,
+		"hasCountry":  len(c.Param("country")) != 0,
+		"countryName": countryName,
+		"metaData": gin.H{
+			"pageURL": requestURL(c.Request.URL),
+		},
+	})
 }
 
 // FindMessages - returns the most recent messages of the given number
@@ -212,11 +232,15 @@ func FindMessages(c *gin.Context) {
 
 	c.HTML(200, "messages.html", gin.H{
 		"messages":       messages,
+		"countryName":    findCountryName(phoneNumber.Country),
 		"randomNumber":   randomNum,
 		"number":         phoneNumber,
 		"nextReadAt":     fmt.Sprintf("%d000", phoneNumber.NextReadAt.Add(4*time.Second).Unix()),
 		"channelID":      channelID.String(),
 		"providerNumber": providerNumber,
+		"metaData": gin.H{
+			"pageURL": requestURL(c.Request.URL),
+		},
 	})
 }
 
@@ -244,5 +268,11 @@ func FindCountries(c *gin.Context) {
 		countries = append(countries, country)
 	}
 
-	c.HTML(200, "countries.html", gin.H{"countries": countries})
+	c.HTML(200, "countries.html", gin.H{
+		"countries":      countries,
+		"countriesCount": len(countries),
+		"metaData": gin.H{
+			"pageURL": requestURL(c.Request.URL),
+		},
+	})
 }
