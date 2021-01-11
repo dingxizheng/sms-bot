@@ -28,14 +28,17 @@ func WSHandler(c *gin.Context) {
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		http.Error(w, "Could not open websocket connection", http.StatusBadRequest)
+		log.Printf("Could not open websocket connection, error: %v", err)
+		http.Error(w, "Could not open websocket connection", http.StatusInternalServerError)
+		return
 	}
-
 	defer conn.Close()
 	closeChan := make(chan struct{})
 	numberChan, ok := NumberChannels[id]
 
 	if !ok {
+		log.Printf("Could not get existing channel(%v)", id)
+		http.Error(w, "Could not get existing channel!", http.StatusBadRequest)
 		return
 	}
 
