@@ -29,6 +29,8 @@ func Start() {
 	// Load templates
 	router.LoadHTMLGlob("templates/*")
 
+	// Robots.txt
+	router.StaticFile("/robots.txt", "./public/robots.txt")
 	// Handle favicon requset
 	router.Use(favicon.New("./favicon.ico"))
 	router.Use(gin.Recovery())

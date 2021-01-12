@@ -80,10 +80,10 @@ func findCountryName(countryCode string) string {
 }
 
 func MountPhoneNumberController(router *gin.Engine) {
+
 	router.GET("/", FindNumbers)
 	router.GET("/home", FindNumbers)
 	router.GET("/phone-numbers", FindNumbers)
-	// router.GET("/phone-numbers/:page", FindNumbers)
 	router.GET("/phone-numbers/:country/:page", FindNumbers)
 	router.GET("/index", FindNumbers)
 

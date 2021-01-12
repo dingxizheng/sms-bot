@@ -6,10 +6,16 @@
     <a href="/phone-numbers/{{ .number.Country }}/1">
       <img style="width: 64px;" src="https://www.countryflags.io/{{ .number.Country }}/flat/64.png">
     </a>
-    <h1 class="display-4">{{ .number.RawNumber }}</h1>
+    <h1 class="display-4 mx-2">{{ .number.RawNumber }}</h1>
   </div>
 </div>
-<div class="d-flex justify-content-center">
+<!-- <div class="d-flex justify-content-center align-items-center">
+  <button type="button" class="btn btn-outline-primary btn-md copy-btn" data-clipboard-text="{{ .number.RawNumber }}">
+    Copy to clipboard
+  </button>
+</div> -->
+
+<div class="d-flex mt-1 justify-content-center">
   <div class="row">
     <p class="lead">Receive your SMS online with our virtual numbers for free!</p>
   </div>
@@ -22,7 +28,18 @@
       <span id="refresh-button-text" class="sr-only">Refresh Page</span>
     </button>
   </div>
-  <div class="ms-3">
+  <div class="ms-2">
+    <button 
+      type="button" 
+      class="btn btn-outline-primary btn-md copy-btn"
+      data-bs-toggle="popover" 
+      data-bs-placement="top" 
+      data-bs-content="Copied"
+      data-clipboard-text="{{ .number.RawNumber }}">
+      Copy to clipboard
+    </button>
+  </div>
+  <div class="ms-2">
     <a href="/free-sms-messages/{{ .randomNumber.Provider }}/{{ .randomNumber.ProviderID }}" type="button" class="btn btn-outline-primary btn-md" onclick="window.location.reload();">
       Another Number
     </a>

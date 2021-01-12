@@ -29,8 +29,18 @@
           </div>
         </div>
         <div class="card-body my-2">
-          <h3 class="card-title pricing-card-title"><small class="text-muted">+{{ .CountryCode }}</small>&nbsp;{{ .Number }}</h3>
-          <a type="button" href="/free-sms-messages/{{ .Provider }}/{{ .ProviderID }}" class="w-100 btn btn-lg btn-outline-primary">Read Messages</a>
+          <div class="d-flex justify-content-center align-items-center">
+            <h3 class="card-title pricing-card-title">
+              <small class="text-muted">+{{ .CountryCode }}</small>&nbsp;{{ .Number }}
+            </h3>
+            <a type="button"
+              class="copy-btn btn-link ms-2"
+              data-bs-toggle="popover" 
+              data-bs-placement="right" 
+              data-bs-content="Copied"
+              data-clipboard-text="{{ .Number }}">Copy</a>
+          </div>
+          <a type="button" class="w-100 mt-2 btn btn-lg btn-outline-primary" href="/free-sms-messages/{{ .Provider }}/{{ .ProviderID }}">Read Messages</a>
         </div>
       </div>
     </div>
