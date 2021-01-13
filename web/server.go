@@ -116,7 +116,7 @@ func Start() {
 		log.Fatal("$PORT must be set")
 	}
 
-	http.ListenAndServe(":"+port, router)
+	http.ListenAndServe("0.0.0.0:"+port, router)
 }
 
 func renderNumbers(w http.ResponseWriter, r *http.Request) {
