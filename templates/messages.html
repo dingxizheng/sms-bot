@@ -3,10 +3,11 @@
       
 <div class="pt-md-5 d-flex justify-content-center">
   <div class="d-flex justify-content-center align-items-center">
-    <a href="/phone-numbers/{{ .number.Country }}/1">
+    <a href="/phone-numbers/{{ .number.CountrySlug }}">
       <img style="width: 64px;" src="https://www.countryflags.io/{{ .number.Country }}/flat/64.png">
     </a>
-    <h1 class="display-4 mx-2">{{ .number.RawNumber }}</h1>
+    <h1 class="display-4 mx-2"><small class="text-muted">+{{ .number.CountryCode }}</small>&nbsp;{{ .number.Number }}</h1>
+    
   </div>
 </div>
 <!-- <div class="d-flex justify-content-center align-items-center">
@@ -40,7 +41,7 @@
     </button>
   </div>
   <div class="ms-2">
-    <a href="/free-sms-messages/{{ .randomNumber.Provider }}/{{ .randomNumber.ProviderID }}" type="button" class="btn btn-outline-primary btn-md" onclick="window.location.reload();">
+    <a href="{{ .randomNumber | phumberNumberURL }}" type="button" class="btn btn-outline-primary btn-md" onclick="window.location.reload();">
       Another Number
     </a>
   </div>

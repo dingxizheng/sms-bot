@@ -6,8 +6,13 @@
 {{ end }}
 
 <div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
-  <h1 class="display-4">Available Numbers</h1>
+  {{ if .hasCountry }}
+  <h1 class="display-4">All {{ .countryName }} Numbers</h1>
   <p class="lead">Receive your SMS online with our virtual numbers for free!</p>
+  {{ else }}  
+  <h1 class="display-4">All Phone Numbers</h1>
+  <p class="lead">Receive your SMS online with our virtual numbers for free!</p>
+  {{ end }}
 </div>
 
 <div class="row row-cols-1 row-cols-md-3 mb-3 text-center">
@@ -17,12 +22,12 @@
         <div class="card-header">
           <div class="d-flex flex-row align-items-center">
             <div>
-              <a href="/phone-numbers/{{ .Country }}/1">
+              <a href="/phone-numbers/{{ .CountrySlug }}">
                 <img style="width: 40px;" src="https://www.countryflags.io/{{ .Country }}/flat/64.png">
               </a>
             </div>
             <div class="ms-2">
-              <a style="text-decoration: none;" href="/phone-numbers/{{ .Country }}/1">
+              <a style="text-decoration: none;" href="/phone-numbers/{{ .CountrySlug }}">
                 {{ .CountryName }}
               </a>
             </div>
@@ -40,7 +45,7 @@
               data-bs-content="Copied"
               data-clipboard-text="{{ .Number }}">Copy</a>
           </div>
-          <a type="button" class="w-100 mt-2 btn btn-lg btn-outline-primary" href="/free-sms-messages/{{ .Provider }}/{{ .ProviderID }}">Read Messages</a>
+          <a type="button" class="w-100 mt-2 btn btn-lg btn-outline-primary" href="{{ . | phumberNumberURL }}">Read Messages</a>
         </div>
       </div>
     </div>

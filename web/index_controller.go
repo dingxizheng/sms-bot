@@ -6,27 +6,12 @@ import (
 	"github.com/dingxizheng/sms-bot/db"
 	"github.com/dingxizheng/sms-bot/providers/models"
 	"github.com/dingxizheng/sms-bot/utils"
-	"github.com/gin-gonic/gin"
+	"github.com/gosimple/slug"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func MountIndexController(router *gin.Engine) {
-	router.GET("/.sitemap.xml", GenerateSiteMapFile)
-
-	router.GET("/privacy", func(c *gin.Context) {
-		c.HTML(
-			http.StatusOK,
-			"privacy.html",
-			gin.H{
-				"title": "Web",
-				"url":   "./web.json",
-			},
-		)
-	})
-}
-
-func GenerateSiteMapFile(c *gin.Context) {
+func GenerateSiteMapFile(w http.ResponseWriter, r *http.Request) {
 	matchStage := bson.M{"status": "online", "country": bson.M{"$ne": ""}}
 	groupStage := bson.M{"_id": "$country", "count": bson.M{"$sum": 1}}
 	sortStage := bson.M{"count": -1}
@@ -46,6 +31,7 @@ func GenerateSiteMapFile(c *gin.Context) {
 		country := models.SMSCountry{}
 		cursor.Decode(&country)
 		country.CountryName = utils.FindCountryName(country.Country)
+		country.CountrySlug = slug.Make(country.CountryName)
 		countries = append(countries, country)
 	}
 
@@ -55,10 +41,9 @@ func GenerateSiteMapFile(c *gin.Context) {
 	for cursor.Next(db.DefaultCtx()) {
 		num := models.PhoneNumber{}
 		cursor.Decode(&num)
-		num.CountryName = utils.FindCountryName(num.Country)
 		numbers = append(numbers, num)
 	}
 
-	c.Header("Content-Type", "application/xml")
-	c.HTML(200, "sitemap.xml", gin.H{"numbers": numbers, "countries": countries})
+	w.Header().Add("Content-Type", "application/xml")
+	rnd.Template(w, 200, []string{"templates/sitemap.xml"}, H{"numbers": numbers, "countries": countries})
 }

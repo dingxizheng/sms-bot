@@ -7,6 +7,7 @@ require (
 	astuart.co/goq v1.0.0 // indirect
 	github.com/PuerkitoBio/goquery v1.5.0
 	github.com/gin-gonic/gin v1.6.3
+	github.com/go-chi/chi v1.5.1
 	github.com/go-playground/validator/v10 v10.4.1 // indirect
 	github.com/go-resty/resty/v2 v2.3.0 // indirect
 	github.com/golang/protobuf v1.4.3 // indirect
@@ -26,6 +27,7 @@ require (
 	github.com/pariz/gountries v0.0.0-20200430155801-1c6a393df9c7
 	github.com/peterh/liner v1.2.1 // indirect
 	github.com/satori/go.uuid v1.2.0
+	github.com/thedevsaddam/renderer v1.2.0
 	github.com/thinkerou/favicon v0.1.0
 	github.com/ttacon/builder v0.0.0-20170518171403-c099f663e1c2 // indirect
 	github.com/ttacon/libphonenumber v1.1.0

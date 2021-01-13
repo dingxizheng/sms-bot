@@ -29,6 +29,17 @@ func main() {
 	// messages := client.FetchMessages("7044570075", 0)
 	// log.Printf("Messages: %+v", messages)
 
+	// coll := db.Collection("numbers")
+	// cusor, _ := coll.Find(db.DefaultCtx(), bson.M{})
+	// for cusor.Next(db.DefaultCtx()) {
+	// 	var num = models.PhoneNumber{}
+	// 	cusor.Decode(&num)
+	// 	num.CountryName = utils.FindCountryName(num.Country)
+	// 	num.CountrySlug = slug.Make(num.CountryName)
+	// 	log.Printf("Updating number = %v, coutryName = %v, CountrySlug = %v", num.ProviderID, num.CountryName, num.CountrySlug)
+	// 	coll.ReplaceOne(db.DefaultCtx(), bson.M{"_id": num.ID}, num)
+	// }
+
 	// go providers.ReadMessagesForNewNumbers()
 	go providers.ScanPhoneNumbers()
 	go providers.ReadMessagesForScheduledNumbers()

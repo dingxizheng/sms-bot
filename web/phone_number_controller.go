@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -13,6 +14,8 @@ import (
 	"github.com/dingxizheng/sms-bot/providers/models"
 	"github.com/dingxizheng/sms-bot/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/go-chi/chi"
+	"github.com/gosimple/slug"
 	uuid "github.com/satori/go.uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -25,35 +28,18 @@ func requestURL(url *url.URL) string {
 	return fmt.Sprintf("https://freesms-online.com%v", url.String())
 }
 
-func MountPhoneNumberController(router *gin.Engine) {
-
-	router.GET("/", FindNumbers)
-	router.GET("/home", FindNumbers)
-	router.GET("/phone-numbers", FindNumbers)
-	router.GET("/phone-numbers/:country/:page", FindNumbers)
-	router.GET("/index", FindNumbers)
-
-	router.GET("/free-sms-messages/:provider/:providerId", FindMessages)
-	router.GET("/messages", FindMessages)
-
-	router.GET("/countries", FindCountries)
-}
-
 // FindNumbers - render numbers
-func FindNumbers(c *gin.Context) {
-	page := c.Param("page")
-	country := c.Param("country")
-	countryName := country
+func FindNumbers(w http.ResponseWriter, r *http.Request, page string, country string) {
+	// page := r.URL.Query().Get("page")
+	// country := chi.URLParam(r, "country")
 
-	if len(country) == 0 {
-		country = "all-countries"
-	} else {
-		countryName = utils.FindCountryName(country)
-	}
+	// if len(country) == 0 {
+	// 	country = "all"
+	// }
 
 	filters := bson.M{"status": "online"}
-	if country != "all-countries" {
-		filters["country"] = strings.ToUpper(country)
+	if country != "all" {
+		filters["country_slug"] = country
 	}
 
 	pageNum, err := strconv.Atoi(page)
@@ -68,7 +54,7 @@ func FindNumbers(c *gin.Context) {
 
 	if err != nil {
 		log.Printf("Failed to fetch phone numbers, error: %+v", err)
-		c.HTML(500, "numbers.html", gin.H{"error": "Oops, something went wrong, please try again later"})
+		rnd.HTML(w, 500, "numbers.html", H{"error": "Oops, something went wrong, please try again later"})
 		return
 	}
 
@@ -76,48 +62,49 @@ func FindNumbers(c *gin.Context) {
 	for cursor.Next(db.DefaultCtx()) {
 		num := models.PhoneNumber{}
 		cursor.Decode(&num)
-		num.CountryName = utils.FindCountryName(num.Country)
+		// num.CountryName = utils.FindCountryName(num.Country)
 		numbers = append(numbers, num)
 	}
 
 	if err != nil {
 		log.Printf("Failed to decode phone numbers, error: %+v", err)
-		c.HTML(500, "numbers.html", gin.H{"error": "Oops, something went wrong, please try again later"})
+		rnd.HTML(w, 500, "numbers.html", H{"error": "Oops, something went wrong, please try again later"})
 		return
 	}
 
 	pages := utils.Pagination(pageNum, totalPages)
 	for idx := range pages {
-		pages[idx].URL = fmt.Sprintf("/phone-numbers/%s/%d", country, pages[idx].Current)
+		pages[idx].URL = fmt.Sprintf("/phone-numbers/%v?page=%d", country, pages[idx].Current)
 		if pageNum == pages[idx].Current {
 			pages[idx].Active = true
 		} else {
 			pages[idx].Active = false
 		}
 	}
-	previousURL := fmt.Sprintf("/phone-numbers/%s/%d", country, pageNum-1)
-	nextURL := fmt.Sprintf("/phone-numbers/%s/%d", country, pageNum+1)
+	previousURL := fmt.Sprintf("/phone-numbers/%v?page=%d", country, pageNum-1)
+	nextURL := fmt.Sprintf("/phone-numbers/%v?page=%d", country, pageNum+1)
 
-	c.HTML(200, "numbers.html", gin.H{
+	rnd.HTML(w, 200, "numbers.html", H{
 		"numbers":     numbers,
 		"hasPrevious": pageNum > 1,
 		"hasNext":     pageNum < totalPages,
 		"previousURL": previousURL,
 		"nextURL":     nextURL,
 		"pages":       pages,
-		"hasCountry":  len(c.Param("country")) != 0,
-		"countryName": countryName,
+		"hasCountry":  country != "all",
+		"countryName": strings.Title(strings.ReplaceAll(country, "-", " ")),
 		"metaData": gin.H{
-			"pageURL": requestURL(c.Request.URL),
+			"pageURL": requestURL(r.URL),
 		},
 	})
 }
 
 // FindMessages - returns the most recent messages of the given number
-func FindMessages(c *gin.Context) {
-	provider := c.Param("provider")
-	providerID := c.Param("providerId")
-	autotriggering, _ := c.Cookie("autotriggering")
+func FindMessages(w http.ResponseWriter, r *http.Request) {
+	provider := chi.URLParam(r, "provider")
+	providerID := chi.URLParam(r, "providerId")
+	autotriggering, _ := r.Cookie("autotriggering")
+
 	coll := db.Collection("numbers")
 	var phoneNumber models.PhoneNumber
 	err := coll.FindOne(db.DefaultCtx(), bson.M{"provider": provider, "provider_id": providerID}).Decode(&phoneNumber)
@@ -136,7 +123,7 @@ func FindMessages(c *gin.Context) {
 
 	if err != nil {
 		log.Printf("Failed to fetch phone numbers, error: %+v", err)
-		c.HTML(500, "messages.html", gin.H{"error": "Oops, something went wrong, please try again later"})
+		rnd.HTML(w, 500, "messages.html", H{"error": "Oops, something went wrong, please try again later"})
 		return
 	}
 
@@ -151,7 +138,7 @@ func FindMessages(c *gin.Context) {
 		shouldScheduleJob = true
 	}
 
-	if shouldScheduleJob && len(autotriggering) == 0 {
+	if shouldScheduleJob && (autotriggering == nil || len(autotriggering.Value) == 0) {
 		nextRunAt := time.Now().Add(5 * time.Second)
 		phoneNumber.NextReadAt = nextRunAt
 		log.Printf("Plan to read messages for number(%v): %v at %v", phoneNumber.Provider, phoneNumber.RawNumber, nextRunAt)
@@ -162,7 +149,7 @@ func FindMessages(c *gin.Context) {
 
 	if err != nil {
 		log.Printf("Failed to decode phone numbers, error: %+v", err)
-		c.HTML(500, "messages.html", gin.H{"error": "Oops, something went wrong, please try again later"})
+		rnd.HTML(w, 500, "messages.html", H{"error": "Oops, something went wrong, please try again later"})
 		return
 	}
 
@@ -177,22 +164,21 @@ func FindMessages(c *gin.Context) {
 		}
 	}
 
-	c.HTML(200, "messages.html", gin.H{
+	rnd.HTML(w, 200, "messages.html", H{
 		"messages":       messages,
 		"countryName":    utils.FindCountryName(phoneNumber.Country),
 		"randomNumber":   randomNum,
 		"number":         phoneNumber,
-		"nextReadAt":     fmt.Sprintf("%d000", phoneNumber.NextReadAt.Add(4*time.Second).Unix()),
 		"channelID":      channelID.String(),
 		"providerNumber": providerNumber,
 		"metaData": gin.H{
-			"pageURL": requestURL(c.Request.URL),
+			"pageURL": requestURL(r.URL),
 		},
 	})
 }
 
 // FindCountries - show all available countries
-func FindCountries(c *gin.Context) {
+func FindCountries(w http.ResponseWriter, r *http.Request) {
 	matchStage := bson.M{"status": "online", "country": bson.M{"$ne": ""}}
 	groupStage := bson.M{"_id": "$country", "count": bson.M{"$sum": 1}}
 	sortStage := bson.M{"count": -1}
@@ -212,14 +198,15 @@ func FindCountries(c *gin.Context) {
 		country := models.SMSCountry{}
 		cursor.Decode(&country)
 		country.CountryName = utils.FindCountryName(country.Country)
+		country.CountrySlug = slug.Make(country.CountryName)
 		countries = append(countries, country)
 	}
 
-	c.HTML(200, "countries.html", gin.H{
+	rnd.HTML(w, 200, "countries.html", H{
 		"countries":      countries,
 		"countriesCount": len(countries),
 		"metaData": gin.H{
-			"pageURL": requestURL(c.Request.URL),
+			"pageURL": requestURL(r.URL),
 		},
 	})
 }

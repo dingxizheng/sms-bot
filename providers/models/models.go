@@ -37,6 +37,7 @@ type SMSCountry struct {
 	Country     string `bson:"_id,omitempty"`
 	Count       int    `json:"count" bson:"count"`
 	CountryName string `json:"-" bson:"-"`
+	CountrySlug string `json:"-" bson:"-"`
 }
 
 type SMSProvider interface {

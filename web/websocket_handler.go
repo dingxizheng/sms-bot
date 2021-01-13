@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
 
@@ -16,15 +15,9 @@ type WebClient struct {
 var upgrader = websocket.Upgrader{ReadBufferSize: 1024, WriteBufferSize: 1024}
 var NumberChannels = map[string]*WebClient{}
 
-func MountWSController(router *gin.Engine) {
-	router.GET("/ws", WSHandler)
-}
-
-func WSHandler(c *gin.Context) {
-	r := c.Request
-	w := c.Writer
-	id := c.Query("id")
-	nummber := c.Query("nummber")
+func WSHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	nummber := r.URL.Query().Get("nummber")
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
