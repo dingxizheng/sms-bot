@@ -3,7 +3,9 @@ package web
 import (
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/dingxizheng/sms-bot/providers/models"
@@ -109,7 +111,12 @@ func Start() {
 		rnd.HTML(w, http.StatusNotFound, "404.html", H{})
 	})
 
-	http.ListenAndServe("0.0.0.0:8080", router)
+	port := os.Getenv("PORT")
+	if port == "" {
+		log.Fatal("$PORT must be set")
+	}
+
+	http.ListenAndServe(":"+port, router)
 }
 
 func renderNumbers(w http.ResponseWriter, r *http.Request) {
