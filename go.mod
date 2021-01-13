@@ -12,6 +12,7 @@ require (
 	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/google/martian v2.1.0+incompatible // indirect
 	github.com/gorilla/websocket v1.4.2
+	github.com/gosimple/slug v1.9.0
 	github.com/joho/godotenv v1.3.0
 	github.com/json-iterator/go v1.1.10 // indirect
 	github.com/karrick/tparse v2.4.2+incompatible

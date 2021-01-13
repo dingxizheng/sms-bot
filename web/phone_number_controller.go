@@ -11,72 +11,18 @@ import (
 
 	"github.com/dingxizheng/sms-bot/db"
 	"github.com/dingxizheng/sms-bot/providers/models"
+	"github.com/dingxizheng/sms-bot/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/pariz/gountries"
 	uuid "github.com/satori/go.uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var query = gountries.New()
-
 const pageSize = 30
-
-var countryCache = map[string]string{}
-
-type Page struct {
-	URL     string
-	Text    string
-	Active  bool
-	Current int
-}
 
 func requestURL(url *url.URL) string {
 	return fmt.Sprintf("https://freesms-online.com%v", url.String())
-}
-
-func pagination(c int, m int) []Page {
-	var current = c
-	var last = m
-	var delta = 2
-	var left = current - delta
-	var right = current + delta + 1
-	var pages []Page
-	var pagesWithDots []Page
-	var l = -1
-
-	for i := 1; i <= last; i++ {
-		if i == 1 || i == last || i >= left && i < right {
-			pages = append(pages, Page{Current: i, Text: strconv.Itoa(i)})
-		}
-	}
-
-	for _, page := range pages {
-		i := page.Current
-		if l != -1 {
-			if i-l == 2 {
-				pagesWithDots = append(pagesWithDots, Page{Current: l + 1, Text: strconv.Itoa(l + 1)})
-			} else if i-l != 1 {
-				pagesWithDots = append(pagesWithDots, Page{Current: i - 1, Text: "..."})
-			}
-		}
-		pagesWithDots = append(pagesWithDots, page)
-		l = i
-	}
-
-	return pagesWithDots
-}
-
-func findCountryName(countryCode string) string {
-	name := countryCache[countryCode]
-	if len(name) != 0 {
-		return name
-	}
-
-	country, _ := query.FindCountryByAlpha(countryCode)
-	countryCache[countryCode] = country.Name.Common
-	return country.Name.Common
 }
 
 func MountPhoneNumberController(router *gin.Engine) {
@@ -93,6 +39,7 @@ func MountPhoneNumberController(router *gin.Engine) {
 	router.GET("/countries", FindCountries)
 }
 
+// FindNumbers - render numbers
 func FindNumbers(c *gin.Context) {
 	page := c.Param("page")
 	country := c.Param("country")
@@ -101,7 +48,7 @@ func FindNumbers(c *gin.Context) {
 	if len(country) == 0 {
 		country = "all-countries"
 	} else {
-		countryName = findCountryName(country)
+		countryName = utils.FindCountryName(country)
 	}
 
 	filters := bson.M{"status": "online"}
@@ -129,7 +76,7 @@ func FindNumbers(c *gin.Context) {
 	for cursor.Next(db.DefaultCtx()) {
 		num := models.PhoneNumber{}
 		cursor.Decode(&num)
-		num.CountryName = findCountryName(num.Country)
+		num.CountryName = utils.FindCountryName(num.Country)
 		numbers = append(numbers, num)
 	}
 
@@ -139,7 +86,7 @@ func FindNumbers(c *gin.Context) {
 		return
 	}
 
-	pages := pagination(pageNum, totalPages)
+	pages := utils.Pagination(pageNum, totalPages)
 	for idx := range pages {
 		pages[idx].URL = fmt.Sprintf("/phone-numbers/%s/%d", country, pages[idx].Current)
 		if pageNum == pages[idx].Current {
@@ -232,7 +179,7 @@ func FindMessages(c *gin.Context) {
 
 	c.HTML(200, "messages.html", gin.H{
 		"messages":       messages,
-		"countryName":    findCountryName(phoneNumber.Country),
+		"countryName":    utils.FindCountryName(phoneNumber.Country),
 		"randomNumber":   randomNum,
 		"number":         phoneNumber,
 		"nextReadAt":     fmt.Sprintf("%d000", phoneNumber.NextReadAt.Add(4*time.Second).Unix()),
@@ -264,7 +211,7 @@ func FindCountries(c *gin.Context) {
 	for cursor.Next(db.DefaultCtx()) {
 		country := models.SMSCountry{}
 		cursor.Decode(&country)
-		country.CountryName = findCountryName(country.Country)
+		country.CountryName = utils.FindCountryName(country.Country)
 		countries = append(countries, country)
 	}
 

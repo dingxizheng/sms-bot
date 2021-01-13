@@ -11,6 +11,8 @@ import (
 	"github.com/dingxizheng/sms-bot/db"
 	"github.com/dingxizheng/sms-bot/httpclient"
 	"github.com/dingxizheng/sms-bot/providers/models"
+	"github.com/dingxizheng/sms-bot/utils"
+	"github.com/gosimple/slug"
 	"github.com/karrick/tparse/v2"
 	"github.com/ttacon/libphonenumber"
 	"go.mongodb.org/mongo-driver/bson"
@@ -108,6 +110,8 @@ func (pv *Client) FetchNumbers(url string, page int) []models.PhoneNumber {
 			Number:      nationalNum,
 			Country:     regionNumber,
 			CountryCode: countryCode,
+			CountryName: utils.FindCountryName(regionNumber),
+			CountrySlug: slug.Make(utils.FindCountryName(regionNumber)),
 			Status:      status,
 		})
 	})

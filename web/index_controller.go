@@ -5,6 +5,7 @@ import (
 
 	"github.com/dingxizheng/sms-bot/db"
 	"github.com/dingxizheng/sms-bot/providers/models"
+	"github.com/dingxizheng/sms-bot/utils"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -44,7 +45,7 @@ func GenerateSiteMapFile(c *gin.Context) {
 	for cursor.Next(db.DefaultCtx()) {
 		country := models.SMSCountry{}
 		cursor.Decode(&country)
-		country.CountryName = findCountryName(country.Country)
+		country.CountryName = utils.FindCountryName(country.Country)
 		countries = append(countries, country)
 	}
 
@@ -54,7 +55,7 @@ func GenerateSiteMapFile(c *gin.Context) {
 	for cursor.Next(db.DefaultCtx()) {
 		num := models.PhoneNumber{}
 		cursor.Decode(&num)
-		num.CountryName = findCountryName(num.Country)
+		num.CountryName = utils.FindCountryName(num.Country)
 		numbers = append(numbers, num)
 	}
 
