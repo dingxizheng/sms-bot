@@ -29,7 +29,7 @@
 {{ end }}
 {{ range .numbers }}
 <url>
-  <loc>https://freesms-online.com/phone-nunbmer-{{ .Provider }}-{{ .ProviderID }}</loc>
+  <loc>https://freesms-online.com/phone-number-{{ .Provider }}-{{ .ProviderID }}</loc>
   <lastmod>{{ .CreatedAt | timeString }}</lastmod>
   <priority>0.64</priority>
 </url>
