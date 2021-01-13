@@ -109,7 +109,7 @@ func Start() {
 		rnd.HTML(w, http.StatusNotFound, "404.html", H{})
 	})
 
-	http.ListenAndServe(":8080", router)
+	http.ListenAndServe("0.0.0.0:8080", router)
 }
 
 func renderNumbers(w http.ResponseWriter, r *http.Request) {
